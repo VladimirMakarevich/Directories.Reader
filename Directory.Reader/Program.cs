@@ -41,8 +41,6 @@ namespace Directories.Reader
 
             var datetime = DateTime.Now.ToString("yyyy-dd-M-HH-mm", CultureInfo.InvariantCulture);
 
-            File.WriteAllText($"$collections-{datetime}.md", string.Join(", ", collections));
-
             foreach (string path in collections)
             {
                 if (Directory.Exists(path))
