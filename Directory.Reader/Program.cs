@@ -72,18 +72,27 @@ namespace Directories.Reader
         {
             StringBuilder sb = new StringBuilder();
 
+            sb.AppendLine("---");
+            sb.AppendLine($"title: {Environment.UserDomainName.ToLowerInvariant()}-explorer");
+            sb.AppendLine($"date created: {DateTime.Now.ToString("yyyy-M-dd HH:mm", CultureInfo.InvariantCulture)}");
+            sb.AppendLine($"date updated: {DateTime.Now.ToString("yyyy-M-dd HH:mm", CultureInfo.InvariantCulture)}");
+            sb.AppendLine("---");
+
+            sb.AppendLine("");
+            sb.AppendLine("# System Info:");
+            sb.AppendLine("");
+            sb.AppendLine($"> UserDomainName: {Environment.UserDomainName}.");
+            sb.AppendLine($"> UserName: {Environment.UserName}.");
+            sb.AppendLine($"> Version: {Environment.Version}.");
+            sb.AppendLine("");
+
             foreach (var container in Directories)
             {
                 var nestingCount = 0;
-                sb.AppendLine($"# =={container.Name}==");
+
+                sb.AppendLine($"### =={container.Name}==");
                 sb.AppendLine("");
-                sb.AppendLine($"> {container.Path}.");
-                sb.AppendLine("");
-                sb.AppendLine("## SystemInfo:");
-                sb.AppendLine($"User Domain Name: {Environment.UserDomainName}.");
-                sb.AppendLine($"User Name: {Environment.UserName}.");
-                sb.AppendLine($"Version: {Environment.Version}.");
-                sb.AppendLine("");
+                sb.AppendLine($"> {container.Path}");
                 sb.AppendLine("");
 
                 if (container.Files != null && container.Files.Any())
@@ -95,9 +104,20 @@ namespace Directories.Reader
                 {
                     ProcessSubContainersMdFormat(container.SubContainers, sb, nestingCount);
                 }
-            }
 
-            File.WriteAllText($"notes-{datetime}.md", sb.ToString());
+                sb.AppendLine("");
+                sb.AppendLine("---");
+                sb.AppendLine("");
+            }
+            
+            sb.AppendLine("`**keywords:**`");
+            sb.AppendLine("");
+            sb.AppendLine("#notes");
+            sb.AppendLine("#explorer");
+            sb.AppendLine($"#{Environment.UserDomainName}");
+            sb.AppendLine("");
+
+            File.WriteAllText($"notes-{Environment.UserDomainName.ToLowerInvariant()}-{datetime}.md", sb.ToString());
         }
 
         private static void ProcessSubContainersMdFormat(List<ContainerModel> subContainers, StringBuilder sb, int nestingCount)
