@@ -272,6 +272,8 @@ namespace Directories.Reader
             "Samples && Presentation",
             "angular2_essential-materials",
             "materials",
+            "games",
+            "pf"
         };
 
         private static readonly List<string> Extensions = new List<string>()
