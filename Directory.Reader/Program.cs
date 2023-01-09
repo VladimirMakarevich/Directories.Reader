@@ -30,14 +30,12 @@ namespace Directories.Reader
         {
             var collections = args.ToList();
 
-            //collections.Add("d:\\");
-            //collections.Add("e:\\");
-            //collections.Add("f:\\");
-            //collections.Add("g:\\");
-            //collections.Add("h:\\");
-            //collections.Add("j:\\");
+            collections.Add("e:\\");
+            collections.Add("g:\\");
+            collections.Add("h:\\");
+            collections.Add("j:\\");
 
-            collections.Add("C:\\$VladimirMakarevich");
+            //collections.Add("C:\\$VladimirMakarevich");
 
             var datetime = DateTime.Now.ToString("yyyy-dd-M-HH-mm", CultureInfo.InvariantCulture);
 
@@ -60,35 +58,35 @@ namespace Directories.Reader
                 }
             }
 
-            File.WriteAllText($"$errors-{datetime}.md", _sbErrors.ToString());
-            File.WriteAllText($"json-notes-{datetime}.md", JsonConvert.SerializeObject(Directories, Formatting.Indented));
+            File.WriteAllText($"$errors-{datetime}.json", _sbErrors.ToString());
+            File.WriteAllText($"json-notes-{datetime}.json", JsonConvert.SerializeObject(Directories, Formatting.Indented));
 
             ProcessMdFormat(datetime);
         }
 
         private static void ProcessMdFormat(string datetime)
         {
-            StringBuilder sb = new StringBuilder();
-
-            sb.AppendLine("---");
-            sb.AppendLine($"title: {Environment.UserDomainName.ToLowerInvariant()}-explorer");
-            sb.AppendLine($"date created: {DateTime.Now.ToString("yyyy-M-dd HH:mm", CultureInfo.InvariantCulture)}");
-            sb.AppendLine($"date updated: {DateTime.Now.ToString("yyyy-M-dd HH:mm", CultureInfo.InvariantCulture)}");
-            sb.AppendLine("---");
-
-            sb.AppendLine("");
-            sb.AppendLine("# System Info:");
-            sb.AppendLine("");
-            sb.AppendLine($"> UserDomainName: {Environment.UserDomainName}.");
-            sb.AppendLine($"> UserName: {Environment.UserName}.");
-            sb.AppendLine($"> Version: {Environment.Version}.");
-            sb.AppendLine("");
-
             foreach (var container in Directories)
             {
+                StringBuilder sb = new StringBuilder();
+
+                sb.AppendLine("---");
+                sb.AppendLine($"title: {Environment.UserDomainName.ToLowerInvariant()}-{container.Name}-explorer");
+                sb.AppendLine($"date created: {DateTime.Now.ToString("yyyy-M-dd HH:mm", CultureInfo.InvariantCulture)}");
+                sb.AppendLine($"date updated: {DateTime.Now.ToString("yyyy-M-dd HH:mm", CultureInfo.InvariantCulture)}");
+                sb.AppendLine("---");
+
+                sb.AppendLine("");
+                sb.AppendLine("# System Info:");
+                sb.AppendLine("");
+                sb.AppendLine($"> UserDomainName: {Environment.UserDomainName}.");
+                sb.AppendLine($"> UserName: {Environment.UserName}.");
+                sb.AppendLine($"> Version: {Environment.Version}.");
+                sb.AppendLine("");
+
                 var nestingCount = 0;
 
-                sb.AppendLine($"### =={container.Name}==");
+                sb.AppendLine($"### ==Disc {container.Name.ToUpperInvariant()}==");
                 sb.AppendLine("");
                 sb.AppendLine($"> {container.Path}");
                 sb.AppendLine("");
@@ -106,16 +104,16 @@ namespace Directories.Reader
                 sb.AppendLine("");
                 sb.AppendLine("---");
                 sb.AppendLine("");
-            }
-            
-            sb.AppendLine("`**keywords:**`");
-            sb.AppendLine("");
-            sb.AppendLine("#notes");
-            sb.AppendLine("#explorer");
-            sb.AppendLine($"#{Environment.UserDomainName}");
-            sb.AppendLine("");
 
-            File.WriteAllText($"notes-{Environment.UserDomainName.ToLowerInvariant()}-{datetime}.md", sb.ToString());
+                sb.AppendLine("`**keywords:**`");
+                sb.AppendLine("");
+                sb.AppendLine("#notes");
+                sb.AppendLine("#explorer");
+                sb.AppendLine($"#{Environment.UserDomainName}");
+                sb.AppendLine("");
+
+                File.WriteAllText($"notes-{container.Name}-{Environment.UserDomainName.ToLowerInvariant()}-{datetime}.md", sb.ToString());
+            }
         }
 
         private static void ProcessSubContainersMdFormat(List<ContainerModel> subContainers, StringBuilder sb, int nestingCount)
@@ -123,17 +121,14 @@ namespace Directories.Reader
             foreach (var container in subContainers)
             {
                 sb.AppendLine($"{GetNestingWhitespaces(nestingCount)}- !{container.Name}");
+                if (container.Files != null && container.Files.Any())
+                {
+                    ProcessFilesMdFormat(container.Files, sb, nestingCount + 1);
+                }
+
                 if (container.SubContainers != null && container.SubContainers.Any())
                 {
-                    if (container.Files != null && container.Files.Any())
-                    {
-                        ProcessFilesMdFormat(container.Files, sb, nestingCount + 1);
-                    }
-
-                    if (container.SubContainers != null && container.SubContainers.Any())
-                    {
-                        ProcessSubContainersMdFormat(container.SubContainers, sb, nestingCount + 1);
-                    }
+                    ProcessSubContainersMdFormat(container.SubContainers, sb, nestingCount + 1);
                 }
             }
         }
@@ -161,11 +156,6 @@ namespace Directories.Reader
         // that are found, and process the files they contain.
         public static void ProcessDirectory(string targetDirectory, ContainerModel container)
         {
-            if (IgnoreList.Contains(GetNameFromPath(targetDirectory)))
-            {
-                return;
-            }
-
             // Process the list of files found in the container.
             try
             {
@@ -186,6 +176,11 @@ namespace Directories.Reader
                 string[] subdirectoryEntries = Directory.GetDirectories(targetDirectory);
                 foreach (string subdirectory in subdirectoryEntries)
                 {
+                    if (IgnoreList.Contains(GetNameFromPath(subdirectory)))
+                    {
+                        continue;
+                    }
+
                     var subContainer = new ContainerModel()
                     {
                         Name = GetNameFromPath(subdirectory)
@@ -205,7 +200,13 @@ namespace Directories.Reader
 
         private static string GetNameFromPath(string targetDirectory)
         {
-            return targetDirectory.Split("\\").Last();
+            var name = targetDirectory.Split("\\").Last();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return targetDirectory.Split(":").First();
+            }
+
+            return name;
         }
 
         // Insert logic for processing found files here.
@@ -241,7 +242,36 @@ namespace Directories.Reader
             ".git",
             ".idea",
             "node_modules",
-            "__1"
+            "__1",
+            "0_qulix",
+            "music",
+            "photos",
+            "galaxy s10 backup",
+            "programming",
+            "programming&SQL",
+            "projects",
+            "cache AE&PP",
+            "musicW",
+            "photoW",
+            "videoW",
+            "projects",
+            "photos WORKS",
+            "university STUDY",
+            "video WORKS",
+            "alex",
+            "ableton live",
+            "ableton",
+            "pdd",
+            "shit rest",
+            "payments",
+            "1-exercise-files",
+            "2-exercise-files",
+            "3-exercise-files",
+            "4-exercise-files",
+            "EFFECTIVE_JENKINS_CONTINUOUS_DE",
+            "Samples && Presentation",
+            "angular2_essential-materials",
+            "materials",
         };
 
         private static readonly List<string> Extensions = new List<string>()
