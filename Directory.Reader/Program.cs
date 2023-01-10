@@ -35,7 +35,7 @@ namespace Directories.Reader
             collections.Add("h:\\");
             collections.Add("j:\\");
 
-            //collections.Add("C:\\$VladimirMakarevich");
+            collections.Add("C:\\$VladimirMakarevich");
 
             var datetime = DateTime.Now.ToString("yyyy-dd-M-HH-mm", CultureInfo.InvariantCulture);
 
